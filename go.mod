@@ -1,4 +1,4 @@
-module github.com/letsfire/cache
+module github.com/easy-cache/cache
 
 go 1.12
 
