@@ -40,8 +40,8 @@ var testDataMap = map[string]consumer{
 	},
 }
 
-func TestCache(t *testing.T) {
-	var c = New(MapDriver())
+func TestPrefixCache(t *testing.T) {
+	var c = WithPrefix("test", MapDriver())
 	ttl := time.Millisecond * 2
 	for key, val := range testDataMap {
 		var tmp consumer
