@@ -23,6 +23,15 @@ type DriverInterface interface {
 	Has(key string) (bool, error)
 }
 
+type Interface interface {
+	Has(key string) bool
+	Get(key string, dest interface{}) bool
+	Set(key string, val interface{}, ttl time.Duration) bool
+	Del(key string) bool
+	SetOrDel(key string, val interface{}, ttl time.Duration) bool
+	GetOrSet(key string, dest interface{}, ttl time.Duration, getter func() (interface{}, error)) bool
+}
+
 // Item 缓存过期包装
 type Item struct {
 	Value     []byte    `json:"v"`
