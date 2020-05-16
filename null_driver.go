@@ -14,10 +14,6 @@ func (nd nullDriver) Set(key string, val []byte, ttl time.Duration) error {
 	return nil
 }
 
-func (nd nullDriver) Has(key string) (bool, error) {
-	return false, nil
-}
-
 func (nd nullDriver) Del(key string) error {
 	return nil
 }

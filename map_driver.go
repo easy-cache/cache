@@ -22,11 +22,6 @@ func (md mapDriver) Set(key string, val []byte, ttl time.Duration) error {
 	return nil
 }
 
-func (md mapDriver) Has(key string) (bool, error) {
-	_, ok := md.syncMap.Load(key)
-	return ok, nil
-}
-
 func (md mapDriver) Del(key string) error {
 	md.syncMap.Delete(key)
 	return nil

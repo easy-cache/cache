@@ -5,21 +5,21 @@ import (
 	"time"
 )
 
-type Cache struct {
+type cache struct {
 	codec  CodecInterface
 	driver DriverInterface
 	logger LoggerInterface
 }
 
-func (c *Cache) Has(key string) bool {
-	ok, err := c.driver.Has(key)
+func (c *cache) Has(key string) bool {
+	_, ok, err := c.driver.Get(key)
 	if err != nil {
 		c.logger.Errorf("has key [%s] failed, err = %s", key, err)
 	}
 	return ok
 }
 
-func (c *Cache) Get(key string, dest interface{}) bool {
+func (c *cache) Get(key string, dest interface{}) bool {
 	bs, ok, err := c.driver.Get(key)
 	if err != nil {
 		c.logger.Errorf("get key [%s] failed, err = %s", key, err)
@@ -32,7 +32,7 @@ func (c *Cache) Get(key string, dest interface{}) bool {
 	return false
 }
 
-func (c *Cache) Set(key string, val interface{}, ttl time.Duration) bool {
+func (c *cache) Set(key string, val interface{}, ttl time.Duration) bool {
 	mustGtZero(ttl)
 	vbs, err := c.codec.Encode(val)
 	if err == nil {
@@ -44,7 +44,7 @@ func (c *Cache) Set(key string, val interface{}, ttl time.Duration) bool {
 	return false
 }
 
-func (c *Cache) Del(key string) bool {
+func (c *cache) Del(key string) bool {
 	if err := c.driver.Del(key); err != nil {
 		c.logger.Errorf("del key [%s] failed, err = %s", err)
 		return false
@@ -52,11 +52,11 @@ func (c *Cache) Del(key string) bool {
 	return true
 }
 
-func (c *Cache) SetOrDel(key string, val interface{}, ttl time.Duration) bool {
+func (c *cache) SetOrDel(key string, val interface{}, ttl time.Duration) bool {
 	return c.Set(key, val, ttl) || c.Del(key)
 }
 
-func (c *Cache) GetOrSet(key string, dest interface{}, ttl time.Duration, getter func() (interface{}, error)) bool {
+func (c *cache) GetOrSet(key string, dest interface{}, ttl time.Duration, getter func() (interface{}, error)) bool {
 	if c.Get(key, dest) {
 		return true
 	} else if v, err := getter(); err != nil {
@@ -68,8 +68,8 @@ func (c *Cache) GetOrSet(key string, dest interface{}, ttl time.Duration, getter
 	}
 }
 
-func New(args ...interface{}) *Cache {
-	c := Cache{
+func New(args ...interface{}) Interface {
+	c := cache{
 		codec:  JsonCodec(),
 		driver: NullDriver(),
 		logger: StderrLogger(),

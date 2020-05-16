@@ -20,7 +20,6 @@ type DriverInterface interface {
 	Get(key string) ([]byte, bool, error)
 	Set(key string, val []byte, ttl time.Duration) error
 	Del(key string) error
-	Has(key string) (bool, error)
 }
 
 // Interface 缓存封装
