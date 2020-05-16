@@ -14,5 +14,5 @@ func (sl stderrLogger) Errorf(format string, args ...interface{}) {
 }
 
 func StderrLogger() LoggerInterface {
-	return stderrLogger{logger: log.New(os.Stderr, "ERROR CACHE ", log.LstdFlags)}
+	return stderrLogger{logger: log.New(os.Stderr, "easy-cache: ", log.LstdFlags)}
 }

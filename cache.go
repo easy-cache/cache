@@ -14,7 +14,7 @@ type Cache struct {
 func (c *Cache) Has(key string) bool {
 	ok, err := c.driver.Has(key)
 	if err != nil {
-		c.logger.Errorf("easy-cache: has key [%s] failed, err = %s", key, err)
+		c.logger.Errorf("has key [%s] failed, err = %s", key, err)
 	}
 	return ok
 }
@@ -22,12 +22,12 @@ func (c *Cache) Has(key string) bool {
 func (c *Cache) Get(key string, dest interface{}) bool {
 	bs, ok, err := c.driver.Get(key)
 	if err != nil {
-		c.logger.Errorf("easy-cache: get key [%s] failed, err = %s", key, err)
+		c.logger.Errorf("get key [%s] failed, err = %s", key, err)
 	} else if ok {
 		if err = c.codec.Decode(bs, dest); err == nil {
 			return true
 		}
-		c.logger.Errorf("easy-cache: get key [%s] failed, bytes = %s, err = %s", key, bs, err)
+		c.logger.Errorf("get key [%s] failed, bytes = %s, err = %s", key, bs, err)
 	}
 	return false
 }
@@ -40,13 +40,13 @@ func (c *Cache) Set(key string, val interface{}, ttl time.Duration) bool {
 			return true
 		}
 	}
-	c.logger.Errorf("easy-cache: set key [%s] failed, err = %s", key, err)
+	c.logger.Errorf("set key [%s] failed, err = %s", key, err)
 	return false
 }
 
 func (c *Cache) Del(key string) bool {
 	if err := c.driver.Del(key); err != nil {
-		c.logger.Errorf("easy-cache: del key [%s] failed, err = %s", err)
+		c.logger.Errorf("del key [%s] failed, err = %s", err)
 		return false
 	}
 	return true
@@ -60,7 +60,7 @@ func (c *Cache) GetOrSet(key string, dest interface{}, ttl time.Duration, getter
 	if c.Get(key, dest) {
 		return true
 	} else if v, err := getter(); err != nil {
-		c.logger.Errorf("easy-cache: get or set key [%s] failed, err = %s", key, err)
+		c.logger.Errorf("get or set key [%s] failed, err = %s", key, err)
 		return false
 	} else {
 		reflect.ValueOf(dest).Elem().Set(reflect.ValueOf(v))
@@ -83,7 +83,7 @@ func New(args ...interface{}) *Cache {
 		case LoggerInterface:
 			c.logger = v
 		default:
-			panic("easy-cache: unsupported arg type")
+			panic("unsupported arg type")
 		}
 	}
 	return &c

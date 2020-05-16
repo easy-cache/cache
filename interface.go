@@ -23,6 +23,7 @@ type DriverInterface interface {
 	Has(key string) (bool, error)
 }
 
+// Interface 缓存封装
 type Interface interface {
 	Has(key string) bool
 	Get(key string, dest interface{}) bool
