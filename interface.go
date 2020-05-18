@@ -29,7 +29,7 @@ type Interface interface {
 	Set(key string, val interface{}, ttl time.Duration) bool
 	Del(key string) bool
 	SetOrDel(key string, val interface{}, ttl time.Duration) bool
-	GetOrSet(key string, dest interface{}, ttl time.Duration, getter func() (interface{}, error)) bool
+	GetOrSet(key string, dest interface{}, ttl time.Duration, getter func() (interface{}, error)) error
 }
 
 // Item 缓存过期包装

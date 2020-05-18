@@ -34,7 +34,7 @@ func (pc *prefixCache) SetOrDel(key string, val interface{}, ttl time.Duration) 
 	return pc.cache.SetOrDel(pc.buildKey(key), val, ttl)
 }
 
-func (pc *prefixCache) GetOrSet(key string, dest interface{}, ttl time.Duration, getter func() (interface{}, error)) bool {
+func (pc *prefixCache) GetOrSet(key string, dest interface{}, ttl time.Duration, getter func() (interface{}, error)) error {
 	return pc.cache.GetOrSet(pc.buildKey(key), dest, ttl, getter)
 }
 

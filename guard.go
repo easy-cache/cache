@@ -41,13 +41,13 @@ func (pc *guardCache) SetOrDel(key string, val interface{}, ttl time.Duration) b
 	return pc.cache.SetOrDel(key, val, ttl)
 }
 
-func (pc *guardCache) GetOrSet(key string, dest interface{}, ttl time.Duration, getter func() (interface{}, error)) bool {
-	res, _ := pc.guard.Run("get.set."+key,
+func (pc *guardCache) GetOrSet(key string, dest interface{}, ttl time.Duration, getter func() (interface{}, error)) error {
+	_, err := pc.guard.Run("get.set."+key,
 		func() (interface{}, error) {
-			return pc.cache.GetOrSet(key, dest, ttl, getter), nil
+			return nil, pc.cache.GetOrSet(key, dest, ttl, getter)
 		},
 	)
-	return res.(bool)
+	return err
 }
 
 func WithGuard(cache Interface) Interface {

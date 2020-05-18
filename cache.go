@@ -56,15 +56,15 @@ func (c *cache) SetOrDel(key string, val interface{}, ttl time.Duration) bool {
 	return c.Set(key, val, ttl) || c.Del(key)
 }
 
-func (c *cache) GetOrSet(key string, dest interface{}, ttl time.Duration, getter func() (interface{}, error)) bool {
+func (c *cache) GetOrSet(key string, dest interface{}, ttl time.Duration, getter func() (interface{}, error)) error {
 	if c.Get(key, dest) {
-		return true
+		return nil
 	} else if v, err := getter(); err != nil {
-		c.logger.Errorf("get or set key [%s] failed, err = %s", key, err)
-		return false
+		return err
 	} else {
 		reflect.ValueOf(dest).Elem().Set(reflect.ValueOf(v))
-		return c.Set(key, v, ttl)
+		c.Set(key, v, ttl) // set cache with ttl
+		return nil
 	}
 }
 
