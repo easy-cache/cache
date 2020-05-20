@@ -14,23 +14,23 @@ func (pc *prefixCache) buildKey(key string) string {
 	return fmt.Sprintf("%s.%s", pc.prefix, key)
 }
 
-func (pc *prefixCache) Has(key string) bool {
+func (pc *prefixCache) Has(key string) error {
 	return pc.cache.Has(pc.buildKey(key))
 }
 
-func (pc *prefixCache) Get(key string, dest interface{}) bool {
+func (pc *prefixCache) Get(key string, dest interface{}) error {
 	return pc.cache.Get(pc.buildKey(key), dest)
 }
 
-func (pc *prefixCache) Set(key string, val interface{}, ttl time.Duration) bool {
+func (pc *prefixCache) Set(key string, val interface{}, ttl time.Duration) error {
 	return pc.cache.Set(pc.buildKey(key), val, ttl)
 }
 
-func (pc *prefixCache) Del(key string) bool {
+func (pc *prefixCache) Del(key string) error {
 	return pc.cache.Del(pc.buildKey(key))
 }
 
-func (pc *prefixCache) SetOrDel(key string, val interface{}, ttl time.Duration) bool {
+func (pc *prefixCache) SetOrDel(key string, val interface{}, ttl time.Duration) error {
 	return pc.cache.SetOrDel(pc.buildKey(key), val, ttl)
 }
 

@@ -1,18 +1,16 @@
 package cache
 
 import (
+	"errors"
 	"time"
 )
+
+var ErrMiss = errors.New("cache miss")
 
 // CodecInterface 编码接口
 type CodecInterface interface {
 	Encode(val interface{}) ([]byte, error)
 	Decode(bts []byte, dest interface{}) error
-}
-
-// LoggerInterface 日志接口
-type LoggerInterface interface {
-	Errorf(format string, args ...interface{})
 }
 
 // DriverInterface 驱动接口
@@ -24,11 +22,11 @@ type DriverInterface interface {
 
 // Interface 缓存封装
 type Interface interface {
-	Has(key string) bool
-	Get(key string, dest interface{}) bool
-	Set(key string, val interface{}, ttl time.Duration) bool
-	Del(key string) bool
-	SetOrDel(key string, val interface{}, ttl time.Duration) bool
+	Has(key string) error
+	Get(key string, dest interface{}) error
+	Set(key string, val interface{}, ttl time.Duration) error
+	Del(key string) error
+	SetOrDel(key string, val interface{}, ttl time.Duration) error
 	GetOrSet(key string, dest interface{}, ttl time.Duration, getter func() (interface{}, error)) error
 }
 

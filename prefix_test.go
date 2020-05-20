@@ -45,20 +45,21 @@ func TestPrefixCache(t *testing.T) {
 	ttl := time.Millisecond * 2
 	for key, val := range testDataMap {
 		var tmp consumer
-		assert.False(t, c.Get(key, &tmp))
-		assert.True(t, c.Set(key, val, ttl))
-		assert.True(t, c.Get(key, &tmp))
+		assert.NotNil(t, c.Get(key, &tmp))
+		assert.Nil(t, c.Set(key, val, ttl))
+		assert.Nil(t, c.Get(key, &tmp))
 		assert.EqualValues(t, val, tmp)
 		time.Sleep(ttl) // 等待过期
-		assert.False(t, c.Get(key, &tmp))
+		assert.NotNil(t, c.Get(key, &tmp))
 	}
 
 	for key, val := range testDataMap {
 		var tmp consumer
-		c.GetOrSet(key, &tmp, ttl, func() (i interface{}, err error) {
+		var err = c.GetOrSet(key, &tmp, ttl, func() (i interface{}, err error) {
 			return val, nil
 		})
+		assert.Nil(t, err)
 		assert.EqualValues(t, val, tmp)
-		assert.True(t, c.Del(key))
+		assert.Nil(t, c.Del(key))
 	}
 }

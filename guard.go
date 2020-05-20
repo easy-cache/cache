@@ -11,33 +11,33 @@ type guardCache struct {
 	guard *utils.Guard
 }
 
-func (pc *guardCache) Has(key string) bool {
-	res, _ := pc.guard.Run("has."+key,
+func (pc *guardCache) Has(key string) error {
+	_, err := pc.guard.Run("has."+key,
 		func() (interface{}, error) {
-			return pc.cache.Has(key), nil
+			return nil, pc.cache.Has(key)
 		},
 	)
-	return res.(bool)
+	return err
 }
 
-func (pc *guardCache) Get(key string, dest interface{}) bool {
-	res, _ := pc.guard.Run("get."+key,
+func (pc *guardCache) Get(key string, dest interface{}) error {
+	_, err := pc.guard.Run("get."+key,
 		func() (interface{}, error) {
-			return pc.cache.Get(key, dest), nil
+			return nil, pc.cache.Get(key, dest)
 		},
 	)
-	return res.(bool)
+	return err
 }
 
-func (pc *guardCache) Set(key string, val interface{}, ttl time.Duration) bool {
+func (pc *guardCache) Set(key string, val interface{}, ttl time.Duration) error {
 	return pc.cache.Set(key, val, ttl)
 }
 
-func (pc *guardCache) Del(key string) bool {
+func (pc *guardCache) Del(key string) error {
 	return pc.cache.Del(key)
 }
 
-func (pc *guardCache) SetOrDel(key string, val interface{}, ttl time.Duration) bool {
+func (pc *guardCache) SetOrDel(key string, val interface{}, ttl time.Duration) error {
 	return pc.cache.SetOrDel(key, val, ttl)
 }
 

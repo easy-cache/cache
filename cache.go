@@ -3,68 +3,67 @@ package cache
 import (
 	"reflect"
 	"time"
+
+	"github.com/letsfire/utils"
 )
 
 type cache struct {
 	codec  CodecInterface
 	driver DriverInterface
-	logger LoggerInterface
 }
 
-func (c *cache) Has(key string) bool {
+func (c *cache) Has(key string) error {
 	_, ok, err := c.driver.Get(key)
-	if err != nil {
-		c.logger.Errorf("has key [%s] failed, err = %s", key, err)
+	if err == nil && !ok {
+		err = ErrMiss
 	}
-	return ok
+	return err
 }
 
-func (c *cache) Get(key string, dest interface{}) bool {
+func (c *cache) Get(key string, dest interface{}) error {
 	bs, ok, err := c.driver.Get(key)
-	if err != nil {
-		c.logger.Errorf("get key [%s] failed, err = %s", key, err)
-	} else if ok {
-		if err = c.codec.Decode(bs, dest); err == nil {
-			return true
+	if err == nil {
+		if ok {
+			err = c.codec.Decode(bs, dest)
+		} else {
+			err = ErrMiss
 		}
-		c.logger.Errorf("get key [%s] failed, bytes = %s, err = %s", key, bs, err)
 	}
-	return false
+	return err
 }
 
-func (c *cache) Set(key string, val interface{}, ttl time.Duration) bool {
+func (c *cache) Set(key string, val interface{}, ttl time.Duration) error {
 	mustGtZero(ttl)
 	vbs, err := c.codec.Encode(val)
 	if err == nil {
-		if err = c.driver.Set(key, vbs, ttl); err == nil {
-			return true
-		}
+		err = c.driver.Set(key, vbs, ttl)
 	}
-	c.logger.Errorf("set key [%s] failed, err = %s", key, err)
-	return false
+	return err
 }
 
-func (c *cache) Del(key string) bool {
-	if err := c.driver.Del(key); err != nil {
-		c.logger.Errorf("del key [%s] failed, err = %s", err)
-		return false
-	}
-	return true
+func (c *cache) Del(key string) error {
+	return c.driver.Del(key)
 }
 
-func (c *cache) SetOrDel(key string, val interface{}, ttl time.Duration) bool {
-	return c.Set(key, val, ttl) || c.Del(key)
+func (c *cache) SetOrDel(key string, val interface{}, ttl time.Duration) error {
+	return utils.OneByOneUntilError(
+		func() error {
+			return c.Set(key, val, ttl)
+		},
+		func() error {
+			return c.Del(key)
+		},
+	)
 }
 
 func (c *cache) GetOrSet(key string, dest interface{}, ttl time.Duration, getter func() (interface{}, error)) error {
-	if c.Get(key, dest) {
-		return nil
+	if err := c.Get(key, dest); err != ErrMiss {
+		return err
 	} else if v, err := getter(); err != nil {
 		return err
 	} else {
 		reflect.ValueOf(dest).Elem().Set(reflect.ValueOf(v))
-		c.Set(key, v, ttl) // set cache with ttl
-		return nil
+		return c.Set(key, v, ttl)
 	}
 }
 
@@ -72,7 +71,6 @@ func New(args ...interface{}) Interface {
 	c := cache{
 		codec:  JsonCodec(),
 		driver: NullDriver(),
-		logger: StderrLogger(),
 	}
 	for _, arg := range args {
 		switch v := arg.(type) {
@@ -80,8 +78,6 @@ func New(args ...interface{}) Interface {
 			c.codec = v
 		case DriverInterface:
 			c.driver = v
-		case LoggerInterface:
-			c.logger = v
 		default:
 			panic("unsupported arg type")
 		}
