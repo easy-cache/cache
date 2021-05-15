@@ -3,8 +3,6 @@ package cache
 import (
 	"reflect"
 	"time"
-
-	"github.com/letsfire/utils"
 )
 
 type cache struct {
@@ -46,14 +44,10 @@ func (c *cache) Del(key string) error {
 }
 
 func (c *cache) SetOrDel(key string, val interface{}, ttl time.Duration) error {
-	return utils.OneByOneUntilError(
-		func() error {
-			return c.Set(key, val, ttl)
-		},
-		func() error {
-			return c.Del(key)
-		},
-	)
+	if err := c.Set(key, val, ttl); err == nil {
+		return nil
+	}
+	return c.Del(key)
 }
 
 func (c *cache) GetOrSet(key string, dest interface{}, ttl time.Duration, getter func() (interface{}, error)) error {

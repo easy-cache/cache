@@ -1,18 +1,17 @@
 package cache
 
 import (
+	"sync"
 	"time"
-
-	"github.com/letsfire/utils"
 )
 
 type guardCache struct {
+	guard guard
 	cache Interface
-	guard *utils.Guard
 }
 
 func (pc *guardCache) Has(key string) error {
-	_, err := pc.guard.Run("has."+key,
+	_, err := pc.guard.run("has."+key,
 		func() (interface{}, error) {
 			return nil, pc.cache.Has(key)
 		},
@@ -21,7 +20,7 @@ func (pc *guardCache) Has(key string) error {
 }
 
 func (pc *guardCache) Get(key string, dest interface{}) error {
-	_, err := pc.guard.Run("get."+key,
+	_, err := pc.guard.run("get."+key,
 		func() (interface{}, error) {
 			return nil, pc.cache.Get(key, dest)
 		},
@@ -42,7 +41,7 @@ func (pc *guardCache) SetOrDel(key string, val interface{}, ttl time.Duration) e
 }
 
 func (pc *guardCache) GetOrSet(key string, dest interface{}, ttl time.Duration, getter func() (interface{}, error)) error {
-	_, err := pc.guard.Run("get.set."+key,
+	_, err := pc.guard.run("get.set."+key,
 		func() (interface{}, error) {
 			return nil, pc.cache.GetOrSet(key, dest, ttl, getter)
 		},
@@ -53,6 +52,58 @@ func (pc *guardCache) GetOrSet(key string, dest interface{}, ttl time.Duration, 
 func WithGuard(cache Interface) Interface {
 	return &guardCache{
 		cache: cache,
-		guard: utils.NewGuard(),
+		guard: newGuard(),
 	}
+}
+
+// guard 防止并发
+type guard struct {
+	locker    sync.Mutex
+	callerMap map[string]*caller
+}
+
+func newGuard() guard {
+	return guard{
+		callerMap: make(map[string]*caller),
+	}
+}
+
+func (g *guard) run(key string, callback func() (interface{}, error)) (interface{}, error) {
+	g.locker.Lock()
+	c, ok := g.callerMap[key]
+	if ok {
+		g.locker.Unlock()
+		c.waiter.Wait()
+		return c.result()
+	} else {
+		c = newCall()
+		g.callerMap[key] = c
+		g.locker.Unlock()
+	}
+	c.run(callback)
+	g.locker.Lock()
+	delete(g.callerMap, key)
+	g.locker.Unlock()
+	return c.result()
+}
+
+type caller struct {
+	value  interface{}
+	error  error
+	waiter sync.WaitGroup
+}
+
+func newCall() *caller {
+	c := new(caller)
+	c.waiter.Add(1)
+	return c
+}
+
+func (c *caller) run(fn func() (interface{}, error)) {
+	c.value, c.error = fn()
+	c.waiter.Done()
+}
+
+func (c *caller) result() (interface{}, error) {
+	return c.value, c.error
 }
